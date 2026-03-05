@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>LogiMAT 2026 — Route 2 · Tag 2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#F2F4F7;display:flex;flex-direction:column;height:100%;}
+#app{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+.header{background:linear-gradient(135deg,#2E7D32,#1B5E20);color:#fff;padding:12px 16px;flex-shrink:0;}
+.header-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+.header h1{font-size:20px;font-weight:900;letter-spacing:-0.5px;}
+.header h1 em{font-style:italic;}
+.header .sub{font-size:10px;letter-spacing:2px;opacity:.8;text-transform:uppercase;margin-bottom:2px;}
+.header .meta{font-size:11px;opacity:.85;margin-top:2px;}
+.banner{background:#E8F5E9;border-bottom:1px solid #A5D6A7;padding:7px 16px;font-size:11px;color:#2E7D32;font-weight:600;flex-shrink:0;}
+.tab-bar{display:flex;gap:6px;}
+.tab-btn{background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer;}
+.tab-btn.active{background:rgba(255,255,255,.95);color:#1B5E20;}
+.progress-bar-wrap{background:#fff;border-bottom:1px solid #E0E4EC;padding:10px 16px;flex-shrink:0;}
+.progress-text{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:4px;}
+.progress-text span.pct{font-weight:700;color:#2E7D32;}
+.progress-track{height:4px;background:#EEE;border-radius:2px;margin-bottom:8px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2E7D32,#81C784);border-radius:2px;transition:width .4s;}
+.stop-dots{display:flex;gap:5px;flex-wrap:wrap;}
+.stop-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;border:2px solid #CCC;background:#E8E8E8;color:#666;transition:all .2s;flex-shrink:0;}
+.stop-dot.done{background:#4CAF50;border-color:#2E7D32;color:#fff;}
+.stop-dot.active{border-color:#555;color:#fff;}
+.main{flex:1;display:flex;overflow:hidden;position:relative;}
+#map-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:none;}
+#map-view.visible{display:block;}
+.map-card{background:#fff;border-radius:12px;padding:14px;border:1px solid #E0E4EC;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.legend-title{font-size:10px;font-weight:700;color:#AAA;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#555;}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;border:1px solid rgba(0,0,0,.1);}
+#hall-map{width:100%;display:block;margin:0 auto;max-width:600px;}
+.map-hint{text-align:center;font-size:10px;color:#AAA;margin-top:6px;}
+#detail-panel{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:340px;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.15);overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(100%);transition:transform .25s ease;z-index:100;padding:18px;}
+#detail-panel.open{transform:translateX(0);}
+@media(min-width:700px){
+  #detail-panel{position:relative;transform:none;box-shadow:none;border-left:1px solid #E0E4EC;transition:none;display:none;overflow-y:auto;}
+  #detail-panel.open{display:block;transform:none;}
+  #map-view.visible{flex:1;overflow-y:auto;}
+  .main{overflow:hidden;}
+}
+.panel-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.panel-badge{display:inline-block;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:800;color:#fff;margin-bottom:4px;}
+.panel-highlight{font-size:10px;background:#FFF9C4;color:#B8860B;border-radius:4px;padding:2px 6px;font-weight:700;margin-left:4px;}
+.close-btn{background:none;border:none;font-size:22px;color:#AAA;cursor:pointer;padding:0 4px;line-height:1;}
+.panel-firm{font-size:16px;font-weight:900;margin-bottom:2px;}
+.panel-stand{font-size:11px;font-weight:700;color:#2E7D32;margin-bottom:4px;}
+.panel-halledesc{font-size:10px;color:#888;background:#F5F5F5;border-radius:6px;padding:5px 9px;margin-bottom:12px;line-height:1.5;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.info-box{background:#F8F8F8;border-radius:8px;padding:9px 10px;border:1px solid #EEE;}
+.info-icon{font-size:14px;margin-bottom:2px;}
+.info-label{font-size:9px;color:#AAA;text-transform:uppercase;letter-spacing:1px;}
+.info-val{font-size:11px;font-weight:700;color:#1A1A1A;margin-top:1px;line-height:1.3;}
+.ziel-box{background:#F0FBF0;border-radius:8px;padding:11px;margin-bottom:8px;border:1px solid #C8E6C9;}
+.ziel-box .lbl{font-size:10px;color:#2E7D32;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.ziel-box p{font-size:12px;color:#1A1A1A;line-height:1.6;}
+.tipp-box{background:#FFFDE7;border-radius:8px;padding:11px;margin-bottom:12px;border:1px solid #FDD835;}
+.tipp-box .lbl{font-size:10px;color:#B8860B;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.tipp-box p{font-size:12px;color:#5D4037;line-height:1.6;font-style:italic;}
+.note-box{background:#F5F0FF;border-radius:8px;padding:11px;margin-bottom:12px;border:1px solid #D1B3FF;}
+.note-box .lbl{font-size:10px;color:#6A0DAD;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.note-box textarea{width:100%;min-height:90px;padding:8px 10px;border:1px solid #D1B3FF;border-radius:7px;background:#fff;font-family:inherit;font-size:13px;line-height:1.6;color:#333;resize:vertical;-webkit-appearance:none;}
+.note-box textarea:focus{outline:2px solid #2E7D32;border-color:#2E7D32;}
+.btn-row{display:flex;gap:7px;margin-bottom:10px;}
+.btn-done{flex:1;background:#4CAF50;color:#fff;border:1px solid transparent;border-radius:8px;padding:11px 0;font-weight:800;font-size:12px;cursor:pointer;}
+.btn-done.is-done{background:#E8F5E9;color:#2E7D32;border-color:#A5D6A7;}
+.btn-next{background:#F5F5F5;border:1px solid #DDD;border-radius:8px;padding:11px 14px;font-weight:700;font-size:14px;cursor:pointer;color:#333;}
+.next-hint{background:#F5F5F5;border-radius:8px;padding:9px 11px;font-size:11px;border:1px solid #E8E8E8;}
+.next-hint .lbl{color:#2E7D32;font-weight:700;}
+#list-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:none;}
+#list-view.visible{display:block;}
+.section-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #E0E4EC;}
+.section-title{font-size:10px;font-weight:700;color:#AAA;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.hall-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.hall-chip{display:flex;align-items:center;gap:6px;padding:5px 8px;background:#F8F8F8;border-radius:6px;border:1px solid #EEE;}
+.hall-chip.neu{background:#F0FBF0;border-color:#A5D6A7;}
+.hall-chip-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.hall-chip-name{font-size:10px;font-weight:700;color:#333;}
+.hall-chip-name .new-badge{font-size:8px;background:#C8E6C9;color:#2E7D32;border-radius:3px;padding:1px 3px;font-weight:700;margin-left:3px;}
+.hall-chip-desc{font-size:9px;color:#777;}
+.stop-card{background:#fff;border-radius:10px;margin-bottom:7px;border:1.5px solid #E0E4EC;cursor:pointer;transition:all .15s;overflow:hidden;}
+.stop-card.active-card{border-color:#2E7D32;}
+.stop-card-head{display:flex;align-items:center;gap:10px;padding:11px 14px;}
+.stop-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#fff;flex-shrink:0;}
+.stop-info{flex:1;}
+.stop-name-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px;}
+.stop-name{font-weight:800;font-size:14px;color:#1A1A1A;}
+.stop-name.faded{color:#888;}
+.stop-badge-hl{font-size:9px;background:#FFF9C4;color:#B8860B;border-radius:4px;padding:1px 5px;font-weight:700;}
+.stop-badge-note{font-size:9px;background:#F5F0FF;color:#6A0DAD;border-radius:4px;padding:1px 5px;font-weight:700;}
+.stop-meta{font-size:10px;color:#999;}
+.abhaken-btn{background:#F5F5F5;color:#888;border:1px solid #DDD;border-radius:6px;padding:4px 9px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.abhaken-btn.done{background:#E8F5E9;color:#2E7D32;border-color:#A5D6A7;}
+.stop-card-detail{padding:0 14px 12px;border-top:1px solid #F0F0F0;}
+.stop-card-detail .ziel-line{padding-top:9px;font-size:12px;color:#333;margin-bottom:7px;line-height:1.6;}
+.stop-card-detail .ziel-line b{color:#2E7D32;}
+.stop-card-detail .tipp-line{font-size:11px;color:#5D4037;font-style:italic;background:#FFFDE7;padding:8px 10px;border-radius:7px;border:1px solid #FDD835;margin-bottom:8px;}
+.stop-card-detail .tipp-line b{color:#B8860B;font-style:normal;}
+.note-inline{background:#F5F0FF;border-radius:7px;padding:8px 10px;border:1px solid #D1B3FF;}
+.note-inline .lbl{font-size:9px;color:#6A0DAD;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.note-inline textarea{width:100%;min-height:70px;padding:7px 9px;border:1px solid #D1B3FF;border-radius:6px;background:#fff;font-family:inherit;font-size:13px;line-height:1.5;color:#333;resize:vertical;-webkit-appearance:none;}
+.note-inline textarea:focus{outline:2px solid #2E7D32;border-color:#2E7D32;}
+.tagesplan-box{background:#F1F8E9;border-radius:10px;padding:12px;border:1px solid #AED581;margin-top:6px;}
+.tagesplan-box h3{font-size:13px;font-weight:800;color:#33691E;margin-bottom:8px;}
+.tp-row{display:flex;gap:10px;margin-bottom:5px;}
+.tp-time{font-size:11px;font-weight:700;color:#2E7D32;min-width:38px;}
+.tp-desc{font-size:11px;color:#555;}
+#stop-bar{background:#fff;border-top:1px solid #E0E4EC;padding:8px 10px;display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;}
+.stop-bar-btn{flex-shrink:0;background:#F8F8F8;border:1px solid #E0E0E0;border-radius:8px;padding:5px 9px;cursor:pointer;text-align:left;min-width:82px;position:relative;}
+.stop-bar-btn.active{color:#fff;}
+.stop-bar-btn.sdone{background:#F1F8F1;border-color:#A5D6A7;}
+.stop-bar-btn .sb-meta{font-size:9px;color:#AAA;margin-bottom:1px;}
+.stop-bar-btn .sb-name{font-size:11px;font-weight:800;color:#1A1A1A;line-height:1.2;}
+.stop-bar-btn.sdone .sb-name{color:#2E7D32;}
+.stop-bar-btn.active .sb-meta,.stop-bar-btn.active .sb-name,.stop-bar-btn.active .sb-hall{color:rgba(255,255,255,.9)!important;}
+.stop-bar-btn .sb-hall{font-size:9px;color:#AAA;margin-top:1px;}
+.note-dot{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#6A0DAD;}
+
+/* FOTO SECTION */
+.foto-box{background:#FFF0F5;border-radius:8px;padding:11px;margin-bottom:12px;border:1px solid #FFB3C6;}
+.foto-box .lbl{font-size:10px;color:#C2185B;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+.foto-thumb{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:#F5F5F5;border:1px solid #EEE;}
+.foto-thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;}
+.foto-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.foto-dl{position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:4px;padding:2px 4px;font-size:9px;cursor:pointer;}
+.foto-btn-row{display:flex;gap:6px;}
+.foto-btn{flex:1;padding:8px 0;border-radius:7px;border:none;font-size:12px;font-weight:700;cursor:pointer;}
+.foto-btn.kamera{background:#C2185B;color:#fff;}
+.foto-btn.galerie{background:#F5F5F5;color:#555;border:1px solid #DDD;}
+.foto-count{font-size:10px;color:#999;margin-top:4px;text-align:center;}
+#lightbox{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center;flex-direction:column;}
+#lightbox.open{display:flex;}
+#lightbox img{max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;}
+#lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;}
+#lightbox-dl{margin-top:12px;background:#fff;color:#333;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;}
+#custom-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:none;}
+#custom-view.visible{display:block;}
+.custom-form{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid #E0E4EC;}
+.custom-form h3{font-size:13px;font-weight:800;color:#333;margin-bottom:12px;}
+.form-row{margin-bottom:10px;}
+.form-row label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 10px;border:1px solid #DDD;border-radius:7px;font-family:inherit;font-size:13px;color:#333;background:#fff;-webkit-appearance:none;}
+.form-row input:focus,.form-row textarea:focus{outline:2px solid #6A0DAD;border-color:#6A0DAD;}
+.form-row textarea{min-height:60px;resize:vertical;}
+.add-btn{width:100%;padding:11px;background:#6A0DAD;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;}
+.custom-stop-card{background:#fff;border-radius:10px;margin-bottom:8px;border:1.5px solid #E0E4EC;overflow:hidden;}
+.custom-stop-card.active-card{border-color:#6A0DAD;}
+.custom-card-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;}
+.custom-num{width:32px;height:32px;border-radius:50%;background:#6A0DAD;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;flex-shrink:0;}
+.custom-num.done{background:#4CAF50;}
+.custom-info{flex:1;}
+.custom-name{font-weight:800;font-size:14px;color:#1A1A1A;}
+.custom-meta{font-size:10px;color:#999;margin-top:2px;}
+
+.custom-edit-btn{background:#EEF2FF;color:#3949AB;border:1px solid #C5CAE9;border-radius:6px;padding:4px 9px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.custom-del-btn{background:#FFF0F0;color:#CC2200;border:1px solid #FFCDD2;border-radius:6px;padding:4px 9px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.custom-card-detail{padding:0 14px 14px;border-top:1px solid #F0F0F0;}
+.empty-custom{text-align:center;padding:40px 20px;color:#AAA;}
+.empty-custom .icon{font-size:40px;margin-bottom:12px;}
+.empty-custom p{font-size:13px;line-height:1.6;}
+
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.78);color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:600;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="header">
+  <div class="sub">24.–26. März 2026 · Messe Stuttgart</div>
+  <div class="header-top">
+    <div>
+      <h1>Logi<em>MAT</em> 2026 — Route 2 · Tag 2</h1>
+      <div class="meta" id="header-meta"></div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="btn-map" onclick="switchTab('map')">🗺 Karte</button>
+      <button class="tab-btn" id="btn-list" onclick="switchTab('list')">📋 Liste</button>
+      <button class="tab-btn" id="btn-custom" onclick="switchTab('custom')">🏭 Eigene</button>
+    </div>
+  </div>
+</div>
+<div class="banner">📌 Route 2 ergänzt Route 1 — deckt Hallen 5, 6 und Robotics-Tiefe (H8), Handling-Details (H7) & Stapler-Vergleich (H9/10) ab.</div>
+<div class="progress-bar-wrap">
+  <div class="progress-text"><span id="prog-text"></span><span class="pct" id="prog-pct"></span></div>
+  <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="stop-dots" id="stop-dots"></div>
+</div>
+<div class="main">
+  <div id="map-view" class="visible">
+    <div class="map-card">
+      <div class="legend-title">Ausstellungsbereiche</div>
+      <div class="legend" id="legend"></div>
+      <svg id="hall-map" viewBox="0 0 310 200"></svg>
+      <div class="map-hint">Halle oder Stop antippen für Details</div>
+    </div>
+  </div>
+  <div id="detail-panel">
+    <div class="panel-header">
+      <div><div class="panel-badge" id="dp-badge"></div><span class="panel-highlight" id="dp-hl" style="display:none">⭐ Highlight</span><br/></div>
+      <button class="close-btn" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-firm" id="dp-firm"></div>
+    <div class="panel-stand" id="dp-stand"></div>
+    <div class="panel-halledesc" id="dp-halledesc"></div>
+    <div class="info-grid">
+      <div class="info-box"><div class="info-icon">🎯</div><div class="info-label">Thema</div><div class="info-val" id="dp-thema"></div></div>
+      <div class="info-box"><div class="info-icon">⏱</div><div class="info-label">Zeit</div><div class="info-val" id="dp-dauer"></div></div>
+    </div>
+    <div class="ziel-box"><div class="lbl">✅ Ziel dieses Besuchs</div><p id="dp-ziel"></p></div>
+    <div class="tipp-box"><div class="lbl">💡 Profi-Tipp</div><p id="dp-tipp"></p></div>
+    <div class="note-box"><div class="lbl">📝 Meine Notizen</div><textarea id="dp-note" placeholder="Notizen, Gesprächspunkte, Eindrücke..."></textarea></div>
+        <div class="foto-box">
+      <div class="lbl">📸 Fotos</div>
+      <div class="foto-grid" id="dp-foto-grid"></div>
+      <div class="foto-count" id="dp-foto-count"></div>
+      <div class="foto-btn-row">
+        <button class="foto-btn kamera" onclick="document.getElementById('foto-cam').click()">📷 Foto aufnehmen</button>
+        <button class="foto-btn galerie" onclick="document.getElementById('foto-gal').click()">🖼 Aus Galerie</button>
+      </div>
+      <input type="file" id="foto-cam" accept="image/*" capture="environment" style="display:none" onchange="handlePanelFoto(this)"/>
+      <input type="file" id="foto-gal" accept="image/*" style="display:none" onchange="handlePanelFoto(this)"/>
+    </div>
+    <div class="btn-row">
+      <button class="btn-done" id="dp-done-btn" onclick="toggleDoneActive()">Als besucht markieren</button>
+      <button class="btn-next" id="dp-next-btn" onclick="nextStop()">→</button>
+    </div>
+    <div class="next-hint" id="dp-next-hint"></div>
+  </div>
+  <div id="list-view">
+    <div class="section-card">
+      <div class="section-title">Neu abgedeckte Bereiche</div>
+      <div class="hall-grid" id="hall-grid"></div>
+    </div>
+    <div id="list-stops"></div>
+    <div class="tagesplan-box"><h3>⏰ Empfohlener Tagesplan — Tag 2</h3><div id="tagesplan"></div></div>
+  </div>
+</div>
+<div id="stop-bar"></div>
+</div>
+
+<script>
+const HALL={1:{l:"Halle 1",c:"#2E8BC0",d:"Fördertechnik · Regalbau · Lager"},2:{l:"Halle 2",c:"#1A1A1A",d:"Kennzeichnung · RFID/AUTO-ID"},3:{l:"Halle 3",c:"#2E8BC0",d:"Fördertechnik · Regalbau · Lager"},4:{l:"Halle 4",c:"#B8860B",d:"Software · LVS/WMS · Simulation"},5:{l:"Halle 5",c:"#2E8BC0",d:"Fördertechnik · Regalbau · Betriebseinrichtungen"},6:{l:"Halle 6",c:"#CC2200",d:"Verpackungen · Verpackungssysteme · Verpackungsmaschinen"},7:{l:"Halle 7",c:"#DAA520",d:"Handling · Krane · Brandschutz · Sicherheit · Verladetechnik"},8:{l:"Halle 8",c:"#E87800",d:"Fahrerlose Transportsysteme · Robotics · AGV · AMR"},9:{l:"Halle 9",c:"#8B4513",d:"Flurförderfahrzeuge · Batterie · Energie · Reinigung"},10:{l:"Halle 10",c:"#8B4513",d:"Flurförderfahrzeuge · Ground Conveyors · Batterie · Energie"}};
+const STOPS=[
+  {n:1,h:10,f:"Toyota Material Handling",s:"10G41",t:"Flurförderfahrzeuge / Automatisierung",d:"20 Min",z:"Stand 10G41 (30×20m — größter Stapler-Stand in H10!): Weltmarktführer bei Staplern – vollautomatische AGV-Flurförderzeuge, Energiemanagement & neueste Fahrzeug-Innovationen",tip:"Start Eingang West → direkt Halle 10. Toyota belegt mit 30×20m einen der größten Stände!",hl:true},
+  {n:2,h:10,f:"Alfred Kärcher",s:"10H80",t:"Reinigung / Flurförderfahrzeuge",d:"15 Min",z:"Stand 10H80: Industriereinigungsmaschinen, autonome Reinigungsroboter & Kehrmaschinen für Lager und Logistikzentren",tip:"Direkt nebenan in Halle 10 – Kärcher Halle ist offizieller Hallenname von H10",hl:false},
+  {n:3,h:9,f:"Crown Equipment",s:"9D41",t:"Flurförderfahrzeuge / Übergabeplätze",d:"15 Min",z:"Stand 9D41 (13×16m): Gegengewichts-Stapler, Schubmast-Stapler & Kommissionierfahrzeuge – direkter Vergleich mit Jungheinrich vom Vortag",tip:"Übergang Halle 10 → 9. Crown ist einer der wenigen US-Hersteller auf der Messe",hl:false},
+  {n:4,h:8,f:"Boston Dynamics",s:"8A41",t:"Fahrerlose Transportsysteme / Robotics",d:"20 Min",z:"Stand 8A41 (9×9m): Stretch-Roboter für Kartonentladung & -stapelung – spektakulärster Roboter-Auftritt der Messe, Live-Demos",tip:"Übergang Halle 9 → 8. Boston Dynamics ist absolutes Messehighlight – Schlange einplanen!",hl:true},
+  {n:5,h:8,f:"idealworks (BMW Group)",s:"8D39",t:"Fahrerlose Transportsysteme / AMR",d:"15 Min",z:"Stand 8D39 (14×11m): iw.hub AMR-Plattform – BMW-Tochterunternehmen für autonome mobile Roboter, Flottenmanagement & Skalierung",tip:"Gleiche Halle 8 – idealworks = BMW-interne AMR-Lösung, jetzt kommerziell verfügbar",hl:false},
+  {n:6,h:8,f:"SYNAOS",s:"8B61",t:"Flottenmanagement / FTS-Software",d:"15 Min",z:"Stand 8B61 (30×14m!): Herstellerunabhängige FTS-Flottenmanagementsoftware – koordiniert AGV/AMR verschiedener Hersteller auf einer Plattform",tip:"Einer der größten Stände in H8 – SYNAOS ergänzt perfekt zu den AGV-Systemen von Tag 1",hl:false},
+  {n:7,h:8,f:"Locus Robotics",s:"8D41",t:"AMR / Kommissionierung",d:"15 Min",z:"Stand 8D41 (15×10m): LocusBot AMR-Flotte für kollaborative Kommissionierung – Mensch-Roboter-Zusammenarbeit im Lager live erleben",tip:"Gleiche Halle 8 – Locus ergänzt Boston Dynamics & idealworks zum vollständigen AMR-Marktüberblick",hl:false},
+  {n:8,h:7,f:"J. Schmalz",s:"7C05",t:"Handling / Hebetechnik / Vakuum",d:"15 Min",z:"Stand 7C05 (10×10m): Vakuum-Hebetechnik, ergonomische Handhabungslösungen & Sauggreifer für automatisierte Kommissionier-Arbeitsplätze",tip:"Übergang Halle 8 → 7. Schmalz = Weltmarktführer Vakuum-Hebezeuge",hl:false},
+  {n:9,h:7,f:"Demag",s:"7C35",t:"Krane / Hebezeuge / Handling",d:"15 Min",z:"Stand 7C35 (10×8m): Industriekrane, Kettenzüge & Hebezeuge – Komplettanbieter für Kran- und Hebetechnik",tip:"Gleiche Halle 7 – Demag + Schmalz in einem Schwung",hl:false},
+  {n:10,h:5,f:"TGW Logistics",s:"5C21",t:"Shuttlesystem / Lagerautomatisierung",d:"20 Min",z:"Stand 5C21 (12×16m): Hochleistungs-Shuttle-Systeme, automatisierte Kommissionierung & integrierte Intralogistik-Lösungen",tip:"Übergang Halle 7 → 5. TGW ist einer der führenden Systemintegratoren weltweit",hl:false},
+  {n:11,h:5,f:"SAFELOG",s:"5C29",t:"Fahrerlose Transportsysteme / AMR",d:"15 Min",z:"Stand 5C29 (16×10m): FTS-Systeme für automatisierte Lagerlogistik & autonome Transportlösungen – europäischer AGV-Spezialist",tip:"Direkt neben TGW in Halle 5 – beide in einem Schwung",hl:false},
+  {n:12,h:5,f:"Exotec",s:"5F71",t:"Shuttlesystem / Lagerautomatisierung",d:"20 Min",z:"Stand 5F71: Skypod-System – dreidimensionales Shuttle-Roboter-System mit bis zu 10m Höhe, Live-Demo",tip:"Exotec Skypod = komplett andere Technologie als AutoStore – unbedingt vergleichen!",hl:true},
+  {n:13,h:5,f:"Ranpak",s:"5A61",t:"Entsorgung / Verpackungsmaterial",d:"10 Min",z:"Stand 5A61 (18×8m): Papierbasierte Schutzverpackungs-Systeme & nachhaltige Verpackungslösungen",tip:"Gleiche Halle 5 – auf dem Weg Richtung Eingang Ost mitnehmen",hl:false},
+  {n:14,h:6,f:"AUER Packaging",s:"6C51",t:"Intelligente Behälter- & Lagerlösungen",d:"20 Min",z:"Stand 6C51 (20×12m): Kunststoffbehälter, Mehrwegverpackungen & intelligente Lagerbehälter-Systeme – Europas führender Behälter-Spezialist",tip:"Übergang Halle 5 → 6. AUER = Behälter-Spezialist, direkter Vergleich zu BITO (Tag 1)",hl:false},
+  {n:15,h:6,f:"Mosca",s:"6D21",t:"Abpackmaschinen / Verpackungsmaschinen",d:"15 Min",z:"Stand 6D21 (15×9m): Umreifungsmaschinen & automatisierte Verpackungslinien – Weltmarktführer bei Umreifungssystemen",tip:"Gleiche Halle 6 – Mosca + AUER + Packsize = kompletter Verpackungs-Überblick",hl:false},
+  {n:16,h:6,f:"Packsize",s:"6F61",t:"Abpackmaschinen / On-Demand Packaging",d:"15 Min",z:"Stand 6F61 (15×8m): On-Demand Kartonage – Maschinen die den perfekt passenden Karton für jedes Produkt produzieren",tip:"Packsize ist echte Innovation: kein Füllmaterial mehr nötig!",hl:false},
+  {n:17,h:6,f:"Storopack",s:"6F40",t:"Schutzverpackung / Entsorgung",d:"10 Min",z:"Stand 6F40: Schutzverpackungs-Systeme & nachhaltige Verpackungslösungen für E-Commerce und Versandhandel",tip:"Gleiche Halle 6 – auf dem Weg Richtung Eingang Ost mitnehmen",hl:false},
+];
+const THEME_C={"Flurförderfahrzeuge / Automatisierung":"#8B4513","Flurförderfahrzeuge / Übergabeplätze":"#8B4513","Reinigung / Flurförderfahrzeuge":"#8B4513","Fahrerlose Transportsysteme / Robotics":"#E87800","Fahrerlose Transportsysteme / AMR":"#E87800","AMR / Kommissionierung":"#E87800","Flottenmanagement / FTS-Software":"#E87800","Handling / Hebetechnik / Vakuum":"#DAA520","Krane / Hebezeuge / Handling":"#DAA520","Shuttlesystem / Lagerautomatisierung":"#2E8BC0","Entsorgung / Verpackungsmaterial":"#CC2200","Intelligente Behälter- & Lagerlösungen":"#6DC46D","Abpackmaschinen / Verpackungsmaschinen":"#CC2200","Abpackmaschinen / On-Demand Packaging":"#CC2200","Schutzverpackung / Entsorgung":"#CC2200"};
+const sc=s=>THEME_C[s.t]||HALL[s.h].c;
+const SVG_HALLS=[{id:9,x:8,y:30,w:55,h:68},{id:7,x:66,y:30,w:55,h:68},{id:5,x:124,y:30,w:55,h:68},{id:3,x:182,y:30,w:55,h:68},{id:1,x:240,y:30,w:58,h:68},{id:10,x:8,y:116,w:55,h:60},{id:8,x:66,y:116,w:55,h:60},{id:6,x:124,y:116,w:55,h:60},{id:4,x:182,y:116,w:55,h:60},{id:2,x:240,y:116,w:42,h:60}];
+const STOP_POS={1:{x:28,y:140},2:{x:42,y:155},3:{x:28,y:52},4:{x:75,y:130},5:{x:90,y:148},6:{x:75,y:162},7:{x:90,y:162},8:{x:88,y:42},9:{x:100,y:57},10:{x:145,y:44},11:{x:158,y:60},12:{x:145,y:75},13:{x:132,y:60},14:{x:145,y:130},15:{x:158,y:146},16:{x:145,y:160},17:{x:132,y:146}};
+const TAGESPLAN=[["09:30","Eingang West · Halle 10 · Stops 1–2 (Toyota MH + Kärcher)"],["10:05","Halle 9 · Stop 3 (Crown – Stapler-Vergleich)"],["10:25","Halle 8 · Stops 4–7 (Boston Dynamics · idealworks · SYNAOS · Locus)"],["11:45","Halle 7 · Stops 8–9 (Schmalz · Demag)"],["12:30","☕ Mittagspause"],["13:15","Halle 5 · Stops 10–13 (TGW · SAFELOG · Exotec · Ranpak) 🆕"],["14:45","Halle 6 · Stops 14–17 (AUER · Mosca · Packsize · Storopack) 🆕"],["16:00","Eingang Ost · Fertig! 🎉"]];
+
+const SK='lm_r2_v2';
+let state={done:new Set(),notes:{},active:null,tab:'map'};
+(function(){try{const r=localStorage.getItem(SK);if(r){const p=JSON.parse(r);state.done=new Set(p.done||[]);state.notes=p.notes||{};}}catch(e){}})();
+function saveState(){try{localStorage.setItem(SK,JSON.stringify({done:[...state.done],notes:state.notes}));}catch(e){}}
+
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,children){const e=['svg','rect','circle','line','text','polygon','g','defs','filter','feDropShadow','animate'].includes(tag)?document.createElementNS(NS,tag):document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(k==='style'&&typeof v==='object')Object.assign(e.style,v);else e.setAttribute(k,v);}for(const c of(children||[])){if(c)e.appendChild(typeof c==='string'?document.createTextNode(c):c);}return e;}
+
+function buildMap(){
+  const svg=document.getElementById('hall-map');svg.innerHTML='';
+  const defs=el('defs',{},[el('filter',{id:'ds'},[el('feDropShadow',{dx:0,dy:1,stdDeviation:1.5,'flood-opacity':0.18})])]);
+  svg.appendChild(defs);
+  svg.appendChild(el('rect',{width:310,height:200,fill:'#E8EDF0',rx:8}));
+  svg.appendChild(el('rect',{x:0,y:102,width:310,height:10,fill:'#B8CEB4'}));
+  svg.appendChild(el('text',{x:155,y:109,fill:'#5A7A52','font-size':5,'text-anchor':'middle','font-weight':600},['Messepark']));
+  svg.appendChild(el('text',{x:305,y:68,fill:'#2E7D32','font-size':4.8,'text-anchor':'end','font-weight':700},['EINGANG OST ↓']));
+  svg.appendChild(el('text',{x:5,y:68,fill:'#555','font-size':4.8,'font-weight':700},['← EINGANG WEST']));
+  svg.appendChild(el('rect',{x:240,y:22,width:58,height:8,fill:'#2E7D32',rx:2}));
+  svg.appendChild(el('text',{x:269,y:28,fill:'#fff','font-size':4.5,'text-anchor':'middle','font-weight':700},['Galerie / Gallery']));
+  svg.appendChild(el('rect',{x:284,y:116,width:18,height:60,fill:'#444',rx:3}));
+  for(const hall of SVG_HALLS){
+    const{id,x,y,w,h}=hall,th=HALL[id],hasStop=STOPS.some(s=>s.h===id);
+    const isAct=state.active&&STOPS.find(s=>s.n===state.active)?.h===id;
+    const allDone=hasStop&&STOPS.filter(s=>s.h===id).every(s=>state.done.has(s.n));
+    const g=el('g',{filter:'url(#ds)',style:{cursor:hasStop?'pointer':'default'}});
+    if(hasStop)g.addEventListener('click',()=>{const f=STOPS.find(s=>s.h===id);if(f)openStop(f.n);});
+    if(id===7){g.appendChild(el('rect',{x,y,width:w,height:h,fill:isAct?'#1565C0':'#1976D2',rx:4}));g.appendChild(el('rect',{x,y,width:w,height:h*0.45,fill:isAct?'#ECC225':'#DAA520',rx:4}));if(isAct)g.appendChild(el('rect',{x,y,width:w,height:h,fill:'none',stroke:'#fff','stroke-width':2.5,rx:4}));g.appendChild(el('text',{x:x+w/2,y:y+h/2+5,fill:'#fff','font-size':11,'text-anchor':'middle','font-weight':900,filter:'url(#ds)'},['7']));}
+    else if(id===9){g.appendChild(el('rect',{x,y,width:w,height:h,fill:isAct?'#9B5E2A':'#8B4513',rx:4}));g.appendChild(el('rect',{x,y,width:w*0.45,height:h*0.28,fill:isAct?'#ECC225':'#DAA520',rx:3}));g.appendChild(el('rect',{x:x+w*0.57,y,width:w*0.43,height:h*0.28,fill:'#2E6B2E',rx:3}));if(isAct)g.appendChild(el('rect',{x,y,width:w,height:h,fill:'none',stroke:'#fff','stroke-width':2.5,rx:4}));g.appendChild(el('text',{x:x+w/2,y:y+h/2+8,fill:'#fff','font-size':11,'text-anchor':'middle','font-weight':900,filter:'url(#ds)'},['9']));}
+    else if(id===6){g.appendChild(el('rect',{x,y,width:w,height:h,fill:isAct?'#E03320':'#CC2200',rx:4}));g.appendChild(el('polygon',{points:`${x+8},${y+h} ${x+22},${y} ${x+34},${y} ${x+20},${y+h}`,fill:'#6DC46D',opacity:0.9}));if(isAct)g.appendChild(el('rect',{x,y,width:w,height:h,fill:'none',stroke:'#fff','stroke-width':2.5,rx:4}));g.appendChild(el('text',{x:x+w/2,y:y+h/2+5,fill:'#fff','font-size':11,'text-anchor':'middle','font-weight':900,filter:'url(#ds)'},['6']));}
+    else{const fill=allDone?'#4CAF5033':isAct?th.c+'EE':hasStop?th.c+'BB':th.c+'33';g.appendChild(el('rect',{x,y,width:w,height:h,fill,stroke:isAct?'#fff':allDone?'#4CAF50':hasStop?th.c:th.c+'55','stroke-width':isAct?2.5:1.5,rx:4}));g.appendChild(el('text',{x:x+w/2,y:y+h/2+5,fill:hasStop?'#fff':'#aaa','font-size':11,'text-anchor':'middle','font-weight':900,filter:'url(#ds)'},[String(id)]));}
+    svg.appendChild(g);
+  }
+  for(let i=0;i<STOPS.length-1;i++){const p1=STOP_POS[STOPS[i].n],p2=STOP_POS[STOPS[i+1].n],both=state.done.has(STOPS[i].n)&&state.done.has(STOPS[i+1].n);svg.appendChild(el('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,stroke:both?'#4CAF50':'#2E7D32','stroke-width':both?1.5:1,'stroke-dasharray':both?'none':'4 2',opacity:both?0.9:0.5}));}
+  for(const stop of STOPS){const pos=STOP_POS[stop.n],isAct=state.active===stop.n,isDone=state.done.has(stop.n),color=sc(stop);const g=el('g',{style:{cursor:'pointer'}});g.addEventListener('click',()=>openStop(isAct?null:stop.n));if(isAct){const p=el('circle',{cx:pos.x,cy:pos.y,r:11,fill:'none',stroke:color,'stroke-width':1.5,opacity:0.4});p.appendChild(el('animate',{attributeName:'r',values:'9;13;9',dur:'1.8s',repeatCount:'indefinite'}));g.appendChild(p);}if(stop.hl&&!isDone){const gw=el('circle',{cx:pos.x,cy:pos.y,r:10,fill:'none',stroke:'#FFD700','stroke-width':1.2,opacity:0.7});gw.appendChild(el('animate',{attributeName:'r',values:'8;12;8',dur:'2s',repeatCount:'indefinite'}));g.appendChild(gw);}g.appendChild(el('circle',{cx:pos.x,cy:pos.y,r:isAct?8:6.5,fill:isDone?'#4CAF50':isAct?'#fff':color,stroke:isAct?color:isDone?'#2E7D32':'rgba(255,255,255,0.9)','stroke-width':isAct?2.5:1.5,filter:'url(#ds)'}));g.appendChild(el('text',{x:pos.x,y:pos.y+3,fill:isDone?'#fff':isAct?color:'#fff','font-size':isAct?7:6,'text-anchor':'middle','font-weight':800},[isDone?'✓':String(stop.n)]));svg.appendChild(g);}
+}
+
+function buildLegend(){const leg=document.getElementById('legend');for(const item of [{c:'#2E8BC0',l:'Fördertechnik·Regalbau·Lager (H.1,3,5)'},{c:'#DAA520',l:'Handling·Krane·Sicherheit (H.7 oben, H.9)'},{c:'#8B4513',l:'Flurförderfahrzeuge·Batterie (H.9,10)'},{c:'#2E6B2E',l:'Ladungssicherung (H.9)'},{c:'#B8860B',l:'Software·LVS/WMS (H.4)'},{c:'#E87800',l:'Fahrerlose FTS·Robotics (H.8)'},{c:'#CC2200',l:'Verpackungen (H.6)'},{c:'#6DC46D',l:'Behälterlösungen (H.6)'},{c:'#1A1A1A',l:'Kennzeichnung·RFID (H.2)'}]){const d=document.createElement('div');d.className='legend-item';const dot=document.createElement('div');dot.className='legend-dot';dot.style.background=item.c;d.appendChild(dot);d.appendChild(document.createTextNode(item.l));leg.appendChild(d);}}
+
+function buildStopBar(){const bar=document.getElementById('stop-bar');bar.innerHTML='';for(const s of STOPS){const color=sc(s),isAct=state.active===s.n,isDone=state.done.has(s.n);const btn=document.createElement('button');btn.className='stop-bar-btn'+(isAct?' active':isDone?' sdone':'');if(isAct)btn.style.background=color;if(state.notes[s.n]){const dot=document.createElement('div');dot.className='note-dot';btn.appendChild(dot);}const meta=document.createElement('div');meta.className='sb-meta';meta.textContent=`Stop #${s.n} · ${s.d}`;const name=document.createElement('div');name.className='sb-name';name.textContent=(isDone?'✓ ':'')+s.f.split(' ')[0];const hall=document.createElement('div');hall.className='sb-hall';hall.textContent=HALL[s.h].l;btn.appendChild(meta);btn.appendChild(name);btn.appendChild(hall);btn.addEventListener('click',()=>openStop(isAct?null:s.n));bar.appendChild(btn);}}
+
+function updateProgress(){const cnt=state.done.size,tot=STOPS.length,pct=Math.round(cnt/tot*100);document.getElementById('prog-text').textContent=`${cnt} / ${tot} Stände besucht`;document.getElementById('prog-pct').textContent=`${pct}%`;document.getElementById('prog-fill').style.width=`${pct}%`;const dots=document.getElementById('stop-dots');dots.innerHTML='';for(const s of STOPS){const d=document.createElement('div');d.className='stop-dot'+(state.done.has(s.n)?' done':state.active===s.n?' active':'');if(state.active===s.n)d.style.background=sc(s);d.textContent=state.done.has(s.n)?'✓':s.n;d.title=`#${s.n} ${s.f}`;d.addEventListener('click',()=>{openStop(s.n);switchTab('map');});dots.appendChild(d);}}
+
+document.getElementById('header-meta').textContent=`${STOPS.length} Stände · ${STOPS.reduce((a,s)=>a+parseInt(s.d),0)} Min. · Eingang West → Eingang Ost`;
+
+function openStop(n){if(!n){closePanel();return;}const ta=document.getElementById('dp-note');if(state.active&&ta){state.notes[state.active]=ta.value;saveState();}state.active=n;const stop=STOPS.find(s=>s.n===n),hall=HALL[stop.h],isDone=state.done.has(n);document.getElementById('dp-badge').textContent=`Stop #${n} · ${hall.l}`;document.getElementById('dp-badge').style.background=hall.c;document.getElementById('dp-hl').style.display=stop.hl?'inline':'none';document.getElementById('dp-firm').textContent=stop.f;document.getElementById('dp-stand').textContent=`Stand ${stop.s}`;document.getElementById('dp-halledesc').textContent=hall.d;document.getElementById('dp-thema').textContent=stop.t;document.getElementById('dp-dauer').textContent=stop.d;document.getElementById('dp-ziel').textContent=stop.z;document.getElementById('dp-tipp').textContent=stop.tip;ta.value=state.notes[n]||'';ta.oninput=()=>{state.notes[n]=ta.value;saveState();};
+  renderPanelFotos();const doneBtn=document.getElementById('dp-done-btn');doneBtn.textContent=isDone?'✓ Besucht':'Als besucht markieren';doneBtn.className='btn-done'+(isDone?' is-done':'');const nextBtn=document.getElementById('dp-next-btn');nextBtn.style.display=n<STOPS.length?'':'none';const nextHint=document.getElementById('dp-next-hint');if(n<STOPS.length){const nx=STOPS[n];nextHint.innerHTML=`<span class="lbl">Nächster Stop → </span>#${nx.n} · ${nx.f} <span style="color:#999">· ${HALL[nx.h].l}</span>`;}else{nextHint.textContent='';}document.getElementById('detail-panel').classList.add('open');render();}
+
+function closePanel(){const ta=document.getElementById('dp-note');if(state.active&&ta){state.notes[state.active]=ta.value;saveState();}state.active=null;document.getElementById('detail-panel').classList.remove('open');render();}
+function toggleDoneActive(){if(!state.active)return;if(state.done.has(state.active))state.done.delete(state.active);else state.done.add(state.active);saveState();const isDone=state.done.has(state.active);const b=document.getElementById('dp-done-btn');b.textContent=isDone?'✓ Besucht':'Als besucht markieren';b.className='btn-done'+(isDone?' is-done':'');render();}
+function nextStop(){if(state.active&&state.active<STOPS.length)openStop(state.active+1);}
+
+function buildListView(){const hg=document.getElementById('hall-grid');hg.innerHTML='';for(const r of [{h:'Halle 5',t:'Fördertechnik · Sortiersysteme',c:'#2E8BC0',neu:true},{h:'Halle 6',t:'Verpackung · Abpackmaschinen · Behälter',c:'#CC2200',neu:true},{h:'Halle 7 ↓',t:'Krane · Vakuum-Handling · Ergonomie',c:'#DAA520',neu:false},{h:'Halle 8 ↓',t:'Boston Dynamics · idealworks · SYNAOS',c:'#E87800',neu:false},{h:'Halle 9/10',t:'Toyota · Crown · Kärcher',c:'#8B4513',neu:false}]){const chip=document.createElement('div');chip.className='hall-chip'+(r.neu?' neu':'');const dot=document.createElement('div');dot.className='hall-chip-dot';dot.style.background=r.c;const info=document.createElement('div');const name=document.createElement('div');name.className='hall-chip-name';name.textContent=r.h;if(r.neu){const nb=document.createElement('span');nb.className='new-badge';nb.textContent='NEU';name.appendChild(nb);}const desc=document.createElement('div');desc.className='hall-chip-desc';desc.textContent=r.t;info.appendChild(name);info.appendChild(desc);chip.appendChild(dot);chip.appendChild(info);hg.appendChild(chip);}const tp=document.getElementById('tagesplan');tp.innerHTML='';for(const[t,d]of TAGESPLAN){const row=document.createElement('div');row.className='tp-row';const time=document.createElement('span');time.className='tp-time';time.textContent=t;const desc=document.createElement('span');desc.className='tp-desc';desc.textContent=d;row.appendChild(time);row.appendChild(desc);tp.appendChild(row);}}
+
+function buildStopCards(){const container=document.getElementById('list-stops');container.innerHTML='';for(const stop of STOPS){const color=sc(stop),isAct=state.active===stop.n,isDone=state.done.has(stop.n);const card=document.createElement('div');card.className='stop-card'+(isAct?' active-card':'');card.style.opacity=isDone?'0.75':'1';const head=document.createElement('div');head.className='stop-card-head';const num=document.createElement('div');num.className='stop-num';num.style.background=isDone?'#4CAF50':color;num.textContent=isDone?'✓':stop.n;const info=document.createElement('div');info.className='stop-info';const nameRow=document.createElement('div');nameRow.className='stop-name-row';const nm=document.createElement('span');nm.className='stop-name'+(isDone?' faded':'');nm.textContent=stop.f;nameRow.appendChild(nm);if(stop.hl){const hl=document.createElement('span');hl.className='stop-badge-hl';hl.textContent='⭐ Highlight';nameRow.appendChild(hl);}if(state.notes[stop.n]){const nb=document.createElement('span');nb.className='stop-badge-note';nb.textContent='📝';nameRow.appendChild(nb);}const meta=document.createElement('div');meta.className='stop-meta';meta.textContent=`${HALL[stop.h].l} · Stand ${stop.s} · ${stop.t} · ${stop.d}`;info.appendChild(nameRow);info.appendChild(meta);const abBtn=document.createElement('button');abBtn.className='abhaken-btn'+(isDone?' done':'');abBtn.textContent=isDone?'✓':'Abhaken';abBtn.addEventListener('click',e=>{e.stopPropagation();if(state.done.has(stop.n))state.done.delete(stop.n);else state.done.add(stop.n);saveState();buildStopCards();updateProgress();buildStopBar();});head.appendChild(num);head.appendChild(info);head.appendChild(abBtn);card.appendChild(head);if(isAct){const det=document.createElement('div');det.className='stop-card-detail';const zl=document.createElement('div');zl.className='ziel-line';zl.innerHTML=`<b>✅ Ziel: </b>${stop.z}`;const tl=document.createElement('div');tl.className='tipp-line';tl.innerHTML=`<b>💡 Tipp: </b>${stop.tip}`;const ni=document.createElement('div');ni.className='note-inline';const nl=document.createElement('div');nl.className='lbl';nl.textContent='📝 Meine Notizen';const ta=document.createElement('textarea');ta.placeholder='Notizen, Gesprächspunkte, Eindrücke...';ta.value=state.notes[stop.n]||'';ta.addEventListener('click',e=>e.stopPropagation());ta.addEventListener('input',e=>{state.notes[stop.n]=e.target.value;saveState();});ni.appendChild(nl);ni.appendChild(ta);det.appendChild(zl);det.appendChild(tl);det.appendChild(ni);card.appendChild(det);}card.addEventListener('click',()=>{state.active=(isAct?null:stop.n);buildStopCards();updateProgress();buildStopBar();});container.appendChild(card);}}
+
+function switchTab(tab){
+  state.tab=tab;
+  document.getElementById('map-view').classList.toggle('visible',tab==='map');
+  document.getElementById('list-view').classList.toggle('visible',tab==='list');
+  const cv=document.getElementById('custom-view');
+  if(cv) cv.classList.toggle('visible',tab==='custom');
+  document.getElementById('stop-bar').style.display=tab==='map'?'flex':'none';
+  document.getElementById('btn-map').classList.toggle('active',tab==='map');
+  document.getElementById('btn-list').classList.toggle('active',tab==='list');
+  const bc=document.getElementById('btn-custom');
+  if(bc) bc.classList.toggle('active',tab==='custom');
+  if(tab==='list') buildStopCards();
+  if(tab==='custom') buildCustomList();
+}
+
+
+function render(){buildMap();buildStopBar();updateProgress();if(state.tab==='list')buildStopCards();}
+
+buildLegend();buildListView();render();
+
+const MAX_FOTOS=10;
+function fotoKey(id){return 'foto_'+id;}
+function getFotos(id){try{return JSON.parse(localStorage.getItem(fotoKey(id))||'[]');}catch(e){return[];}}
+function saveFotos(id,arr){try{localStorage.setItem(fotoKey(id),JSON.stringify(arr));}catch(e){alert('Speicher voll — bitte Fotos löschen.');}}
+
+function handlePanelFoto(input){
+  const id=state.active; if(!id) return;
+  const fotos=getFotos(id);
+  Array.from(input.files).forEach(file=>{
+    if(fotos.length>=MAX_FOTOS){alert('Max 10 Fotos erreicht.');return;}
+    const r=new FileReader(); r.onload=e=>{fotos.push(e.target.result);saveFotos(id,fotos);renderPanelFotos();}; r.readAsDataURL(file);
+  });
+  input.value='';
+}
+
+function renderPanelFotos(){
+  const id=state.active; if(!id) return;
+  const fotos=getFotos(id);
+  const grid=document.getElementById('dp-foto-grid');
+  const cnt=document.getElementById('dp-foto-count');
+  if(!grid) return;
+  grid.innerHTML='';
+  fotos.forEach((src,i)=>{
+    const w=document.createElement('div'); w.className='foto-thumb';
+    const img=document.createElement('img'); img.src=src; img.addEventListener('click',()=>openLightbox(src));
+    const d=document.createElement('button'); d.className='foto-del'; d.textContent='✕';
+    d.addEventListener('click',e=>{e.stopPropagation();const f=getFotos(id);f.splice(i,1);saveFotos(id,f);renderPanelFotos();});
+    const dl=document.createElement('button'); dl.className='foto-dl'; dl.textContent='⬇';
+    dl.addEventListener('click',e=>{e.stopPropagation();dlFoto(src,i);});
+    w.appendChild(img);w.appendChild(d);w.appendChild(dl);grid.appendChild(w);
+  });
+  if(cnt) cnt.textContent=fotos.length?fotos.length+' / '+MAX_FOTOS+' Fotos':'';
+}
+
+function dlFoto(src,i){const a=document.createElement('a');a.href=src;a.download='LogiMAT_Foto_'+(i+1)+'.jpg';a.click();}
+
+let lbSrc='';
+function openLightbox(src){lbSrc=src;document.getElementById('lightbox-img').src=src;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+function downloadLightboxImg(){dlFoto(lbSrc,Date.now());}
+
+// ── Custom stops ──────────────────────────────────────────────────────────────
+const CK='custom_r2';
+function getCS(){try{return JSON.parse(localStorage.getItem(CK)||'[]');}catch(e){return[];}}
+function saveCS(a){try{localStorage.setItem(CK,JSON.stringify(a));}catch(e){}}
+let cActive=null;
+let cEdit=null;
+
+function addCustomStop(){
+  const name=document.getElementById('cf-name').value.trim();
+  if(!name){alert('Bitte Firmenname eingeben.');return;}
+  const stops=getCS();
+  stops.push({id:Date.now(),name,stand:document.getElementById('cf-stand').value.trim(),thema:document.getElementById('cf-thema').value.trim(),note:document.getElementById('cf-note').value.trim(),done:false});
+  saveCS(stops);
+  ['cf-name','cf-stand','cf-thema','cf-note'].forEach(id=>{document.getElementById(id).value='';});
+  buildCustomList();
+}
+
+function buildCustomList(){
+  const container=document.getElementById('custom-list');
+  const stops=getCS();
+  container.innerHTML='';
+  if(!stops.length){
+    container.innerHTML='<div class="empty-custom"><div class="icon">🏭</div><p>Noch keine eigenen Hersteller angelegt.<br>Nutze das Formular oben.</p></div>';
+    return;
+  }
+  stops.forEach((stop,idx)=>{
+    const isAct=cActive===stop.id;
+    const isEdit=cEdit===stop.id;
+    const card=document.createElement('div'); card.className='custom-stop-card'+(isAct?' active-card':'');
+    card.style.opacity=stop.done?'0.72':'1';
+
+    // Head
+    const head=document.createElement('div'); head.className='custom-card-head';
+    const num=document.createElement('div'); num.className='custom-num'+(stop.done?' done':''); num.textContent=stop.done?'✓':(idx+1);
+    const info=document.createElement('div'); info.className='custom-info';
+    const nm=document.createElement('div'); nm.className='custom-name'; nm.textContent=stop.name;
+    const meta=document.createElement('div'); meta.className='custom-meta'; meta.textContent=[stop.stand,stop.thema].filter(Boolean).join(' · ')||'Kein Stand angegeben';
+    info.appendChild(nm); info.appendChild(meta);
+
+    // Action buttons
+    const btnWrap=document.createElement('div'); btnWrap.style.cssText='display:flex;gap:4px;flex-shrink:0;';
+    const editBtn=document.createElement('button'); editBtn.className='custom-edit-btn'; editBtn.textContent='✏️';
+    editBtn.title='Bearbeiten';
+    editBtn.addEventListener('click',e=>{e.stopPropagation();cEdit=(isEdit?null:stop.id);cActive=stop.id;buildCustomList();});
+    const del=document.createElement('button'); del.className='custom-del-btn'; del.textContent='🗑';
+    del.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();const s=getCS().filter(x=>x.id!==stop.id);saveCS(s);if(cActive===stop.id)cActive=null;if(cEdit===stop.id)cEdit=null;buildCustomList();showToast('"'+stop.name+'" gelöscht');});
+    btnWrap.appendChild(editBtn); btnWrap.appendChild(del);
+
+    head.appendChild(num); head.appendChild(info); head.appendChild(btnWrap);
+    head.addEventListener('click',()=>{if(isEdit)return;cActive=(isAct?null:stop.id);buildCustomList();});
+    card.appendChild(head);
+
+    // Edit form
+    if(isEdit){
+      const ef=document.createElement('div'); ef.className='custom-card-detail';
+      ef.style.background='#FAFAFA';
+      const etitle=document.createElement('div'); etitle.style.cssText='font-size:11px;font-weight:700;color:#6A0DAD;text-transform:uppercase;letter-spacing:1px;padding:10px 0 8px;';etitle.textContent='✏️ Daten bearbeiten';
+      ef.appendChild(etitle);
+      const fields=[
+        {id:'e-name-'+stop.id,label:'Firmenname',val:stop.name,key:'name'},
+        {id:'e-stand-'+stop.id,label:'Halle & Stand',val:stop.stand,key:'stand'},
+        {id:'e-thema-'+stop.id,label:'Thema / Bereich',val:stop.thema,key:'thema'},
+      ];
+      fields.forEach(f=>{
+        const row=document.createElement('div'); row.className='form-row';
+        const lbl=document.createElement('label'); lbl.textContent=f.label;
+        const inp=document.createElement('input'); inp.type='text'; inp.id=f.id; inp.value=f.val||''; inp.placeholder=f.label;
+        inp.addEventListener('click',e=>e.stopPropagation());
+        row.appendChild(lbl); row.appendChild(inp); ef.appendChild(row);
+      });
+      // Note textarea
+      const noteRow=document.createElement('div'); noteRow.className='form-row';
+      const noteLbl=document.createElement('label'); noteLbl.textContent='Notizen';
+      const noteTa=document.createElement('textarea'); noteTa.id='e-note-'+stop.id; noteTa.value=stop.note||''; noteTa.placeholder='Notizen...';
+      noteTa.addEventListener('click',e=>e.stopPropagation());
+      noteRow.appendChild(noteLbl); noteRow.appendChild(noteTa); ef.appendChild(noteRow);
+      // Save button
+      const saveBtn=document.createElement('button'); saveBtn.className='add-btn'; saveBtn.style.marginTop='4px';
+      saveBtn.textContent='💾 Änderungen speichern';
+      saveBtn.addEventListener('click',e=>{
+        e.stopPropagation();
+        const s=getCS(); const x=s.find(x=>x.id===stop.id);
+        if(x){
+          const newName=document.getElementById('e-name-'+stop.id).value.trim();
+          if(!newName){alert('Firmenname darf nicht leer sein.');return;}
+          x.name=newName;
+          x.stand=document.getElementById('e-stand-'+stop.id).value.trim();
+          x.thema=document.getElementById('e-thema-'+stop.id).value.trim();
+          x.note=document.getElementById('e-note-'+stop.id).value.trim();
+          saveCS(s);
+        }
+        cEdit=null;
+        buildCustomList();
+      });
+      ef.appendChild(saveBtn);
+      card.appendChild(ef);
+    } else if(isAct){
+      // Normal detail view
+      const det=document.createElement('div'); det.className='custom-card-detail';
+      const db=document.createElement('button');
+      db.style.cssText='width:100%;padding:10px;margin:10px 0 8px;border-radius:8px;border:none;font-weight:800;font-size:12px;cursor:pointer;background:'+(stop.done?'#E8F5E9':'#4CAF50')+';color:'+(stop.done?'#2E7D32':'#fff')+';';
+      db.textContent=stop.done?'✓ Besucht':'Als besucht markieren';
+      db.addEventListener('click',()=>{const s=getCS();const x=s.find(x=>x.id===stop.id);if(x){x.done=!x.done;saveCS(s);buildCustomList();}});
+      det.appendChild(db);
+      if(stop.note){
+        const nb=document.createElement('div'); nb.style.cssText='background:#F5F5F5;border-radius:7px;padding:8px 10px;margin-bottom:8px;font-size:12px;color:#555;line-height:1.6;';
+        nb.textContent=stop.note; det.appendChild(nb);
+      }
+      // Fotos
+      const fid='c'+stop.id;
+      const fb=document.createElement('div'); fb.className='foto-box';
+      fb.innerHTML='<div class="lbl">📸 Fotos</div><div class="foto-grid" id="cfg-'+fid+'"></div><div class="foto-count" id="cfc-'+fid+'"></div><div class="foto-btn-row"><button class="foto-btn kamera" onclick="document.getElementById(\'cfc-cam-'+fid+'\').click()">📷 Foto aufnehmen</button><button class="foto-btn galerie" onclick="document.getElementById(\'cfc-gal-'+fid+'\').click()">🖼 Aus Galerie</button></div><input type="file" id="cfc-cam-'+fid+'" accept="image/*" capture="environment" style="display:none" onchange="handleCustomFoto(this,\''+fid+'\')"/><input type="file" id="cfc-gal-'+fid+'" accept="image/*" style="display:none" onchange="handleCustomFoto(this,\''+fid+'\')"\/>';
+      det.appendChild(fb);
+      card.appendChild(det);
+      setTimeout(()=>renderCustomGrid(fid),0);
+    }
+    container.appendChild(card);
+  });
+}
+
+
+function handleCustomFoto(input,fid){
+  const fotos=getFotos(fid);
+  Array.from(input.files).forEach(file=>{
+    if(fotos.length>=MAX_FOTOS){alert('Max 10 Fotos.');return;}
+    const r=new FileReader();r.onload=e=>{fotos.push(e.target.result);saveFotos(fid,fotos);renderCustomGrid(fid);};r.readAsDataURL(file);
+  });
+  input.value='';
+}
+
+function renderCustomGrid(fid){
+  const grid=document.getElementById('cfg-'+fid);
+  const cnt=document.getElementById('cfc-'+fid);
+  if(!grid) return;
+  const fotos=getFotos(fid); grid.innerHTML='';
+  fotos.forEach((src,i)=>{
+    const w=document.createElement('div');w.className='foto-thumb';
+    const img=document.createElement('img');img.src=src;img.addEventListener('click',()=>openLightbox(src));
+    const d=document.createElement('button');d.className='foto-del';d.textContent='✕';
+    d.addEventListener('click',e=>{e.stopPropagation();const f=getFotos(fid);f.splice(i,1);saveFotos(fid,f);renderCustomGrid(fid);});
+    const dl=document.createElement('button');dl.className='foto-dl';dl.textContent='⬇';
+    dl.addEventListener('click',e=>{e.stopPropagation();dlFoto(src,i);});
+    w.appendChild(img);w.appendChild(d);w.appendChild(dl);grid.appendChild(w);
+  });
+  if(cnt)cnt.textContent=fotos.length?fotos.length+' / '+MAX_FOTOS+' Fotos':'';
+}
+
+
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+buildCustomList();
+</script>
+<div id="toast"></div>
+</body>
+</html>
